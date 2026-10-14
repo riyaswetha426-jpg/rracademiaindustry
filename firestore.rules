@@ -1,0 +1,193 @@
+rules_version = '2';
+
+// ============================================================================
+// RR ACADEMIA & INDUSTRY CONNECT — CLOUD FIRESTORE SECURITY RULES
+// ============================================================================
+//
+// Assumed Data Model:
+//
+// 1. Collection: adminUsers
+//    Document ID: {userId} (Firebase Auth UID, or verified administrator Email)
+//    Fields:
+//      - uid: string (Firebase User UID)
+//      - email: string (Administrator Email address)
+//      - role: string (Must be 'admin')
+//      - active: bool (Account activation state)
+//      - createdAt: timestamp/string (optional)
+//      - updatedAt: timestamp/string (optional)
+//    Security: Client-side writes STRICTLY FORBIDDEN. Read restricted to self.
+//
+// 2. Collection: siteSettings
+//    Document ID: 'main'
+//    Fields:
+//      - heroHeadline, heroSubheadline: string
+//      - statsYears, statsPartners, statsPrograms, statsStudents: string/number
+//      - contactEmail, contactPhone, address: string
+//      - updatedAt: timestamp
+//    Security: Public read. Writes restricted to verified administrators.
+//
+// 3. Collection: services
+//    Document ID: {serviceId}
+//    Fields:
+//      - title, slug, description, category: string
+//      - published: bool
+//      - sortOrder / order: number
+//      - updatedAt: timestamp
+//    Security: Public read. Writes restricted to verified administrators.
+//
+// 4. Collection: media
+//    Document ID: {mediaId} (e.g. 'hero_main', 'about_featured')
+//    Fields:
+//      - url, alt, label: string
+//      - cloudinaryPublicId: string (optional)
+//      - updatedAt: timestamp
+//    Security: Public read. Writes restricted to verified administrators.
+//
+// 5. Collection: partners
+//    Document ID: {partnerId}
+//    Fields:
+//      - name, category, websiteUrl, description: string
+//      - logoUrl: string (optional)
+//      - sortOrder: number
+//      - published: bool
+//      - updatedAt: timestamp
+//    Security: Public read. Writes restricted to verified administrators.
+//
+// 6. Collection: gallery
+//    Document ID: {galleryId}
+//    Fields:
+//      - title, caption, imageUrl, altText, category, date, location: string
+//      - cloudinaryPublicId: string (optional)
+//      - sortOrder: number
+//      - published: bool
+//      - updatedAt: timestamp
+//    Security: Public read. Writes restricted to verified administrators.
+//
+// 7. Collection: enquiries
+//    Document ID: {enquiryId} (Auto-generated)
+//    Fields:
+//      - name: string (1..100 chars)
+//      - email: string (1..150 chars)
+//      - message: string (1..2000 chars)
+//      - phone: string (optional, <= 30 chars)
+//      - organization: string (optional, <= 120 chars)
+//      - serviceCategory: string (optional, <= 100 chars)
+//      - status: string (Initial state MUST be 'new')
+//      - createdAt: timestamp
+//    Security: Public create with strict schema validation.
+//              Read, update, delete STRICTLY RESTRICTED to verified administrators.
+//
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Authentication & Role Helper Functions
+    // ------------------------------------------------------------------------
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Role-based authorization verified directly against Cloud Firestore allowlist
+    // Validates that request.auth.uid exists in adminUsers with role=='admin' and active==true
+    function isAdmin() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/adminUsers/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/adminUsers/$(request.auth.uid)).data.role == 'admin' &&
+        get(/databases/$(database)/documents/adminUsers/$(request.auth.uid)).data.active == true;
+    }
+
+    // ------------------------------------------------------------------------
+    // Validation Helper Functions
+    // ------------------------------------------------------------------------
+
+    function isValidEnquirySubmission(data) {
+      return data.keys().hasOnly(['name', 'email', 'phone', 'organization', 'serviceCategory', 'message', 'status', 'createdAt', 'id']) &&
+             data.name is string &&
+             data.name.size() > 0 &&
+             data.name.size() <= 100 &&
+             data.email is string &&
+             data.email.size() > 0 &&
+             data.email.size() <= 150 &&
+             data.message is string &&
+             data.message.size() > 0 &&
+             data.message.size() <= 2000 &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
+             (!('organization' in data) || (data.organization is string && data.organization.size() <= 120)) &&
+             (!('serviceCategory' in data) || (data.serviceCategory is string && data.serviceCategory.size() <= 100)) &&
+             (!('status' in data) || data.status == 'new');
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection 1: Administrator Allowlist Directory (adminUsers)
+    // ------------------------------------------------------------------------
+    // Authenticated users can only read their own UID-based document for authorization checks.
+    // Listing the collection and client-side writes are strictly prohibited.
+    match /adminUsers/{userId} {
+      allow get: if isAuthenticated() && request.auth.uid == userId;
+      allow list: if false;
+      allow write: if false;
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection 2: Website Settings (siteSettings)
+    // ------------------------------------------------------------------------
+    match /siteSettings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection 3: Academic & Industry Services (services)
+    // ------------------------------------------------------------------------
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection 4: Media Slots & Banner Registries (media)
+    // ------------------------------------------------------------------------
+    match /media/{mediaId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection 5: Strategic Industry Partners (partners)
+    // ------------------------------------------------------------------------
+    match /partners/{partnerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection 6: Institutional Event Gallery (gallery)
+    // ------------------------------------------------------------------------
+    match /gallery/{galleryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection 7: Private Consultation Leads & Enquiries (enquiries)
+    // ------------------------------------------------------------------------
+    // Public visitors can submit genuine consultation requests with strict schema constraints.
+    // Unauthenticated reads and listings are strictly forbidden (prevents lead data leaks).
+    // Only verified administrators can review dossiers, update status, or delete records.
+    match /enquiries/{enquiryId} {
+      allow create: if isValidEnquirySubmission(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------------
+    // Default Deny Rule
+    // ------------------------------------------------------------------------
+    // Deny read and write access to any undefined collection or path
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
