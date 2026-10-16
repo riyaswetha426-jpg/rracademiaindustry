@@ -11,7 +11,7 @@ Last updated: 2026-10-16 (UPL Limited partner replaced with UPL University of Su
 
 ## State
 
-- **Branch and last commit:** `main`, local commit "Replace UPL Limited partner with UPL University of Sustainable Technology" (not pushed).
+- **Branch and last commit:** `main`, local commit "Replace UPL Limited partner with UPL University of Sustainable Technology" (pushed to origin/main 2026-10-16).
 - **Done:** new logo `public/images/partners/upl-university-logo.png` (transparent cutout of the client's logo); seed partner `partner-upl` in `src/config/siteContent.ts` renamed, re-described and linked to https://upluniversity.ac.in; fallback emblem and section intro in `PartnersSection.tsx` updated; image logos may now use the full 56 px emblem height.
 - **Unfinished:** the live Firestore doc `partners/partner-upl` overrides the code seed (see Next step 1).
 - **How to run and check it:** `npm install`, `npm run build`, `npx vite preview`. Partners section is `#partners` on `/`. To see seed data instead of Firestore, block `firestore.googleapis.com` in Playwright.
