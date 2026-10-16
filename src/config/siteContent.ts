@@ -455,11 +455,11 @@ export const verifiedPartners: PartnerItem[] = [
   },
   {
     id: "partner-upl",
-    name: "UPL",
-    logoUrl: "",
-    description: "Global Sustainable Agriculture & Chemical Enterprise Partner for industrial internships and sustainability research.",
-    category: "Industrial & Agrotech",
-    websiteUrl: "https://www.upl-ltd.com",
+    name: "UPL University of Sustainable Technology",
+    logoUrl: "/images/partners/upl-university-logo.png",
+    description: "University Partner in Ankleshwar, Gujarat, collaborating on sustainable technology education, student internships and sustainability research.",
+    category: "University",
+    websiteUrl: "https://upluniversity.ac.in",
     sortOrder: 4,
     published: true
   },

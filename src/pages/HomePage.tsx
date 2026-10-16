@@ -28,7 +28,7 @@ export const HomePage: React.FC = () => {
       {/* 2. Short Institutional About Introduction & Heritage */}
       <AboutSection />
 
-      {/* 3. Strategic Industry Partners: Google, Redington, Aahokrao Mane Group, UPL, NASSCOM */}
+      {/* 3. Strategic Industry Partners: Google, Redington, Aahokrao Mane Group, UPL University, NASSCOM */}
       <PartnersSection />
 
       {/* 4. Comprehensive Programs for Higher Education (Directly below Partners) */}

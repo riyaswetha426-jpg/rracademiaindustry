@@ -15,7 +15,7 @@ const PartnerEmblem: React.FC<{ name: string; logoUrl?: string; className?: stri
       <img
         src={logoUrl}
         alt={`${name} emblem`}
-        className={`max-h-10 max-w-full object-contain ${className}`}
+        className={`max-h-14 max-w-full object-contain ${className}`}
         loading="lazy"
       />
     );
@@ -85,14 +85,12 @@ const PartnerEmblem: React.FC<{ name: string; logoUrl?: string; className?: stri
 
   if (normalized.includes("upl")) {
     return (
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#F26522] to-[#F7931E] flex items-center justify-center text-white font-black text-xs tracking-wider">
-          UPL
-        </div>
-        <span className="font-sans font-black text-lg tracking-wide text-slate-900">
-          UPL Limited
-        </span>
-      </div>
+      <img
+        src="/images/partners/upl-university-logo.png"
+        alt="UPL University of Sustainable Technology emblem"
+        className={`max-h-14 max-w-full object-contain ${className}`}
+        loading="lazy"
+      />
     );
   }
 
@@ -159,7 +157,7 @@ export const PartnersSection: React.FC = () => {
           </h2>
 
           <p className="text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
-            We collaborate with enterprise technology leaders, manufacturing conglomerates, and national skilling bodies to align academic programs with genuine workforce expectations.
+            We collaborate with enterprise technology leaders, universities and education groups, and national skilling bodies to align academic programs with genuine workforce expectations.
           </p>
         </div>
 
